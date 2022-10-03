@@ -1,6 +1,6 @@
 
 import json
-from typing import List, Union
+from typing import List, Union, Optional
 from pydantic import BaseModel
 
 class anthroRecordModel(BaseModel):
@@ -10,24 +10,31 @@ class anthroRecordModel(BaseModel):
     y:Union[float, int]
     def print(self):
         return "{{y:{0},l:{1},s:{2},m:{3}}}".format(
-            force_int(self.y),
-            force_int(self.l),
-            force_int(self.s),
-            force_int(self.m)
+            (self.y),
+            (self.l),
+            (self.s),
+            (self.m)
         )
     
-def force_int(y):
-    return int(y) if y == int(y) else y
+
 
 class anthroModel(BaseModel):
-    data : List[anthroRecordModel]
+    data_female : List[anthroRecordModel]
+    data_male : List[anthroRecordModel]
+    clean_name : Optional[str]
     name : str
-    y_name = str
+    y_name : str
+
     def print_data(self):
-        ret = '{\n'
-        for row in self.data:
+        ret = 'define {0}For{1}Female:\n{{\n'.format(self.clean_name,self.y_name.capitalize())
+        for row in self.data_female:
             ret += "\t" + row.print() + ",\n"
-        return ret[:-2] + '\n}'
+        ret =ret[:-2] + '\n}\n\n'
+        ret += 'define {0}For{1}Male:\n{{\n'.format(self.clean_name,self.y_name.capitalize())
+        for row in self.data_male:
+            ret += "\t" + row.print() + ",\n"
+        ret =ret[:-2] + '\n}\n\n'
+        return ret
     
 
     
