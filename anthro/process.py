@@ -136,7 +136,7 @@ def  generate_anthro_codesystems(model,codesystem_base_path):
         name = name,
         version = LIB_VERSION,
         status= "active",
-        url=CANNONICAL_BASE+"")
+        url=CANNONICAL_BASE+name)
     
     codesystem_male = []
     for row in model.data_male:
@@ -173,7 +173,16 @@ def  generate_anthro_codesystems(model,codesystem_base_path):
                 property=[CodeSystemConceptProperty(code="column",valueCode="m")]
             )]
         ))
-    codesystem.concept = codesystem_female + codesystem_male
+    codesystem.concept = [
+        CodeSystemConcept(
+            code = 'female',
+            concept = codesystem_male
+        ),
+        CodeSystemConcept(
+            code = 'male',
+            concept = codesystem_female 
+        )
+    ]
 
  
     with open(os.path.join(codesystem_base_path, "codesystem-{0}.json".format(name) ), 'w') as file:
@@ -197,9 +206,9 @@ def generate_anthro_model(name,df):
 
 def  generate_anthro_library(model, cql_base_path,lib_base_path):
 
-
-    filepath = os.path.join(cql_base_path,model.name+".cql")
-    filepath_lib = os.path.join(lib_base_path,'library-'+model.name+".json")
+    full_name = "{}For{}".format(model.clean_name, model.y_name.capitalize())
+    filepath = os.path.join(cql_base_path,full_name+".cql")
+    filepath_lib = os.path.join(lib_base_path,'library-'+full_name+".json")
     # write file
     cql_buffer = get_lib_header(model) +'\n' + model.print_data()+'\n' + add_zscore_functions(model) +'\n'
     library = generate_libraries_def(model, cql_buffer)
@@ -228,23 +237,23 @@ def getColumnName(df):
     
 def add_zscore_functions(model):
     return """define function Zscore{0}For{1}tables(sex String, {1} Decimal):
-		if sex = 'female' then  First({0}Female c where c.y = {1} )
-		else First({0}Male c where  c.y = {1})
+		if sex = 'female' then  First({0}For{1}Female c where c.y = {1} )
+		else First({0}For{1}Male c where  c.y = {1})
             
 define function generateZScore{0}For{1}(sex System.String, {1} System.Decimal, weight  System.Decimal)  : 
 	base.computeZScore(
 		weight,
-		(Zscore{0}tablesFor{1}(sex,{1}).m ), 
-		(Zscore{0}tablesFor{1}(sex,{1}).l ),
-		(Zscore{0}tablesFor{1}(sex,{1}).s )
+		(Zscore{0}For{1}tables(sex,{1}).m ), 
+		(Zscore{0}For{1}tables(sex,{1}).l ),
+		(Zscore{0}For{1}tables(sex,{1}).s )
 	)
 
 define function generate{0}From{1}(sex System.String, {1} System.Decimal, zscore  System.Decimal) : 
 	base.computeReverseZScore(
 		zscore,
-		(Zscore{0}tablesFor{1}(sex,{1}).m ), 
-		(Zscore{0}tablesFor{1}(sex,{1}).l ),
-		(Zscore{0}tablesFor{1}(sex,{1}).s )
+		(Zscore{0}For{1}tables(sex,{1}).m ), 
+		(Zscore{0}For{1}tables(sex,{1}).l ),
+		(Zscore{0}For{1}tables(sex,{1}).s )
 	)
         
 
@@ -256,15 +265,15 @@ define function generate{0}From{1}(sex System.String, {1} System.Decimal, zscore
         
 def get_lib_header(model):
     return """
-library {0} version '{2}'
-using FHIR version '{1}'
-include anthrobase version '{2}' called base
-include FHIRHelpers version '{1}' called FHIRHelpers
-// Antrho library for {0} Z-Score 
+library {0}For{1} version '{3}'
+using FHIR version '{2}'
+include anthrobase version '{3}' called base
+include FHIRHelpers version '{2}' called FHIRHelpers
+// Antrho library for {0}For{1}  Z-Score from the {4} files
 codesystem "administrative-gender": 'http://hl7.org/fhir/administrative-gender'
 //code "Female" : 'female' from "administrative-gender"  display 'Female'
 
-""".format(model.name,FHIR_VERSION, LIB_VERSION)
+""".format(model.clean_name,model.y_name.capitalize(),FHIR_VERSION, LIB_VERSION, model.name)
 
 def generate_libraries_def(model, cql):
     name = "{}For{}".format(model.clean_name, model.y_name.capitalize())
@@ -352,7 +361,7 @@ def get_data_requirement(model):
 
 def get_cql_content(model,cql):
     return [Attachment(
-        id = "ig-loader-" + str(model.name) + ".cql",
+        id = "ig-loader-{}For{}.cql".format(model.clean_name, model.y_name.capitalize()),
         contentType = "text/cql",
         data = base64.b64encode(cql.encode())
     )]

@@ -1,0 +1,132 @@
+ @host=https://fhir.ruler.dk.swisstph-mis.ch/fhir
+#@host=https://fhir.dk.swisstph-mis.ch/matchbox/fhir
+
+
+### EMCareBAse
+POST https://fhir.cql-translator.dk.swisstph-mis.ch/cql/translator?annotations=true&result-types=true HTTP/1.1
+Content-Type: multipart/form-data; boundary=MyBoundary
+Accept: multipart/form-data
+
+--MyBoundary
+Content-Disposition:form-data; name="anthrobae"
+Content-Type: application/cql
+
+< /home/delcpa/Development/smart-emcare/input/cql/acanthro.cql
+
+#/home/delcpa/Development/who-tool/testing/data.cql
+
+--MyBoundary--
+
+
+###
+
+POST https://fhir.cql-translator.dk.swisstph-mis.ch/cql/translator?annotations=true&result-types=true HTTP/1.1
+Content-Type: multipart/form-data; boundary=MyBoundary
+Accept: multipart/form-data
+
+
+--MyBoundary
+Content-Disposition:form-data; name="lennthro"
+Content-Type: application/cql
+
+< /home/delcpa/Development/smart-emcare/input/cql/lenanthro.cql
+
+
+--MyBoundary
+Content-Disposition:form-data; name="anthrobase"
+Content-Type: application/cql
+
+< /home/delcpa/Development/smart-emcare/input/cql/anthrobase.cql
+
+
+
+--MyBoundary--
+
+###
+PUT https://fhir.ruler.dk.swisstph-mis.ch/fhir/Library/acanthro
+Content-Type: application/json
+
+< /home/delcpa/Development/smart-emcare/input/resources/library/library-acanthro.json
+
+###
+PUT https://fhir.ruler.dk.swisstph-mis.ch/fhir/Library/anthrobase
+Content-Type: application/json
+
+< /home/delcpa/Development/smart-emcare/input/resources/library/library-anthrobase.json
+
+
+###
+GET https://fhir.ruler.dk.swisstph-mis.ch/fhir/Library/anthrotest
+###
+# 	{y:91,l:0.3933,s:0.07474,m:13.4779},
+POST https://fhir.ruler.dk.swisstph-mis.ch/fhir/Library/anthrotest/$evaluate
+content-type: application/json
+
+{
+  "resourceType": "Parameters",
+  "parameter": [{
+    "name": "expression",
+    "valueString":"computeZScore"
+  },
+    {  "name": "parameters",
+      "resource": {
+        "resourceType": "Parameters",
+        "parameter":  [{
+            "name": "s",
+            "valueDecimal":"0.07474"
+        },    
+        {
+            "name": "l",
+            "valueDecimal":"0.3933"
+        },    
+        {
+            "name": "m",
+            "valueDecimal":"13.4779"
+        },    
+        {
+            "name": "y",
+            "valueDecimal":"91"
+        },    
+        {
+            "name": "z",
+            "valueDecimal":"-1"
+        },    
+        {
+            "name": "w",
+            "valueDecimal":"15"
+        }]
+      }
+    }
+  ]
+      
+}
+
+
+###
+POST https://fhir.ruler.dk.swisstph-mis.ch/fhir/Library/acanthro/$evaluate
+content-type: application/json
+
+
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {  "name": "parameters",
+      "resource": {
+        "resourceType": "Parameters",
+        "parameter":  [{
+            "name": "Age",
+            "valueDecimal":"600"
+        },    
+        {
+            "name": "sex",
+            "valueString":"female"
+        },    
+        {
+            "name": "Weight",
+            "valueDecimal":"13.4779"
+        } ]
+      }
+    }
+  ]
+      
+}
